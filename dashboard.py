@@ -25,24 +25,24 @@ with psycopg2.connect(DB_CONNECTION_STRING) as conn:
     st.header("License Information")
     st.write(licenses_df)
 
-    # Input form for new licenses
-    st.header("Add New License")
-    with st.form("license_form"):
-        license_name = st.text_input("License Name")
-        user_type = st.text_input("User Type")
-        office_suite = st.text_input("Office Suite")
-        price_per_user = st.number_input("Price Per User", min_value=0.0, step=0.01)
-        submit_button = st.form_submit_button("Add License")
+    # # Input form for new licenses
+    # st.header("Add New License")
+    # with st.form("license_form"):
+    #     license_name = st.text_input("License Name")
+    #     user_type = st.text_input("User Type")
+    #     office_suite = st.text_input("Office Suite")
+    #     price_per_user = st.number_input("Price Per User", min_value=0.0, step=0.01)
+    #     submit_button = st.form_submit_button("Add License")
         
-        if submit_button:
-            insert_query = f"""
-            INSERT INTO licenses (license_name, user_type, office_suite, price_per_user)
-            VALUES ('{license_name}', '{user_type}', '{office_suite}', {price_per_user});
-            """
-            with conn.cursor() as cursor:
-                cursor.execute(insert_query)
-                conn.commit()
-            st.success("License added successfully!")
+    #     if submit_button:
+    #         insert_query = f"""
+    #         INSERT INTO licenses (license_name, user_type, office_suite, price_per_user)
+    #         VALUES ('{license_name}', '{user_type}', '{office_suite}', {price_per_user});
+    #         """
+    #         with conn.cursor() as cursor:
+    #             cursor.execute(insert_query)
+    #             conn.commit()
+    #         st.success("License added successfully!")
 
     # Display Assigned Users and Total Costs
     st.header("Subscription Usage Summary")

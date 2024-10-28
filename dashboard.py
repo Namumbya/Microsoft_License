@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-import psycopg
+import psycopg2
 
 # Database connection configuration
 DB_CONNECTION_STRING = "postgresql://neondb_owner:UhABYS0JKFx6@ep-lively-firefly-a8n4qxbu.eastus2.azure.neon.tech/neondb?sslmode=require"
 
 # Connect to Neon PostgreSQL database
-with psycopg.connect(DB_CONNECTION_STRING) as conn:
+with psycopg2.connect(DB_CONNECTION_STRING) as conn:
     # Page title
     st.title("Microsoft Licensing Costs Dashboard")
 

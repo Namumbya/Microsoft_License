@@ -1,78 +1,72 @@
 import streamlit as st
 import pandas as pd
-import psycopg2
+from sqlalchemy import create_engine
 
 # Database connection configuration
-DB_CONNECTION_STRING = "postgresql://neondb_owner:UhABYS0JKFx6@ep-lively-firefly-a8n4qxbu.eastus2.azure.neon.tech/neondb?sslmode=require"
+DB_CONNECTION_STRING = 'postgresql://tsdbadmin:am9tn6slp7sb72r4@sfo4sscri4.jev7qsi3kr.tsdb.cloud.timescale.com:33121/tsdb?sslmode=require'
 
-# Connect to Neon PostgreSQL database
-with psycopg2.connect(DB_CONNECTION_STRING) as conn:
-    # Page title
-    st.title("Microsoft Licensing Costs Dashboard")
+# Create SQLAlchemy engine
+engine = create_engine(DB_CONNECTION_STRING)
 
-    # Query and load data into DataFrames
-    @st.cache_data
-    def load_data():
-        # Fetching data
+# Function to load data from the database
+def load_data():
+    with engine.connect() as conn:
         licenses_df = pd.read_sql("SELECT * FROM licenses", conn)
         usage_df = pd.read_sql("SELECT * FROM subscription_usage", conn)
-        return licenses_df, usage_df
+    return licenses_df, usage_df
 
-    # Load data
-    licenses_df, usage_df = load_data()
-
-    # Display License Information Table
+# Function to display license information
+def display_license_info(licenses_df):
     st.header("License Information")
     st.write(licenses_df)
 
-    # # Input form for new licenses
-    # st.header("Add New License")
-    # with st.form("license_form"):
-    #     license_name = st.text_input("License Name")
-    #     user_type = st.text_input("User Type")
-    #     office_suite = st.text_input("Office Suite")
-    #     price_per_user = st.number_input("Price Per User", min_value=0.0, step=0.01)
-    #     submit_button = st.form_submit_button("Add License")
-        
-    #     if submit_button:
-    #         insert_query = f"""
-    #         INSERT INTO licenses (license_name, user_type, office_suite, price_per_user)
-    #         VALUES ('{license_name}', '{user_type}', '{office_suite}', {price_per_user});
-    #         """
-    #         with conn.cursor() as cursor:
-    #             cursor.execute(insert_query)
-    #             conn.commit()
-    #         st.success("License added successfully!")
-
-    # Display Assigned Users and Total Costs
+# Function to display subscription usage summary
+def display_usage_summary(licenses_df, usage_df):
     st.header("Subscription Usage Summary")
     usage_summary = usage_df.groupby('license_id').agg(
         total_users=('assigned_users', 'sum'),
         total_cost=('total_cost', 'sum')
     ).reset_index()
 
-    # Merge to include license names
     usage_summary = usage_summary.merge(
         licenses_df[['license_id', 'license_name']], 
         on='license_id', 
         how='left'
     )
     st.write(usage_summary)
+    return usage_summary
 
-    # Visualizations
+# Function to display visualizations
+def display_visualizations(usage_summary):
     st.header("Visualizations")
-
-    # Bar chart for total users per license
     st.subheader("Total Assigned Users per License")
     st.bar_chart(usage_summary.set_index('license_name')['total_users'])
 
-    # Bar chart for total costs per license
     st.subheader("Total Costs per License")
     st.bar_chart(usage_summary.set_index('license_name')['total_cost'])
 
-    # Average number of users per license
-    st.header("Average Number of Users per License")
     avg_users = usage_summary['total_users'].mean()
+    st.header("Average Number of Users per License")
     st.write(f"The average number of users per license is: {avg_users:.2f}")
 
-    # Optionally, you can add more visualizations as needed
+# Main application flow
+def main():
+    st.title("Microsoft Licensing Costs Dashboard")
+
+    # Load data
+    licenses_df, usage_df = load_data()
+
+    # Display data
+    display_license_info(licenses_df)
+    usage_summary = display_usage_summary(licenses_df, usage_df)
+    display_visualizations(usage_summary)
+
+    # Add a refresh button
+    # if st.button("Refresh Data"):
+    #     licenses_df, usage_df = load_data()  # Reload data on button press
+    #     display_license_info(licenses_df)
+    #     usage_summary = display_usage_summary(licenses_df, usage_df)
+    #     display_visualizations(usage_summary)
+
+if __name__ == "__main__":
+    main()

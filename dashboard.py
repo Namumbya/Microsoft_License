@@ -1,12 +1,19 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
+import os
 
-# Database connection configuration
-DB_CONNECTION_STRING = 'postgresql://tsdbadmin:am9tn6slp7sb72r4@sfo4sscri4.jev7qsi3kr.tsdb.cloud.timescale.com:33121/tsdb?sslmode=require'
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the DATABASE_URL variable
+database_url = os.getenv('DATABASE_URL')
+
+
 
 # Create SQLAlchemy engine
-engine = create_engine(DB_CONNECTION_STRING)
+engine = create_engine(database_url)
 
 # Function to load data from the database
 def load_data():

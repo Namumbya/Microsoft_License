@@ -1,2 +1,12 @@
  .env
 
+# Ignore Streamlit secrets
+.streamlit/secrets.toml
+
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd

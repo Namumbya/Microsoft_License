@@ -1,36 +1,34 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
+from pathlib import Path
 
-# Access the database URL from the database section
-database_url = st.secrets["database"]["DATABASE_URL"]
-# Create SQLAlchemy engine
-
-engine = create_engine(database_url)
+DATA_DIR = Path("data")
 
 def load_data():
-    with engine.connect() as conn:
-        licenses_df = pd.read_sql("SELECT * FROM licenses", conn)
-        usage_df = pd.read_sql("SELECT * FROM subscription_usage", conn)
+    lic_path = DATA_DIR / "licenses.csv"
+    use_path = DATA_DIR / "subscription_usage.csv"
+    if not lic_path.exists() or not use_path.exists():
+        st.error("CSV files not found. Please add data/licenses.csv and data/subscription_usage.csv.")
+        st.stop()
+    licenses_df = pd.read_csv(lic_path)
+    usage_df = pd.read_csv(use_path)
     return licenses_df, usage_df
 
 def display_license_info(licenses_df):
     st.header("License Information")
-    st.write(licenses_df)
+    st.dataframe(licenses_df, use_container_width=True)
 
 def display_usage_summary(licenses_df, usage_df):
     st.header("Subscription Usage Summary")
-    usage_summary = usage_df.groupby('license_id').agg(
+    usage_summary = usage_df.groupby('license_id', as_index=False).agg(
         total_users=('assigned_users', 'sum'),
         total_cost=('total_cost', 'sum')
-    ).reset_index()
-
-    usage_summary = usage_summary.merge(
-        licenses_df[['license_id', 'license_name']], 
-        on='license_id', 
+    ).merge(
+        licenses_df[['license_id', 'license_name']],
+        on='license_id',
         how='left'
     )
-    st.write(usage_summary)
+    st.dataframe(usage_summary, use_container_width=True)
     return usage_summary
 
 def display_visualizations(usage_summary):
@@ -47,11 +45,7 @@ def display_visualizations(usage_summary):
 
 def main():
     st.title("Microsoft Licensing Costs Dashboard")
-
-    # Load data
     licenses_df, usage_df = load_data()
-
-    # Display data
     display_license_info(licenses_df)
     usage_summary = display_usage_summary(licenses_df, usage_df)
     display_visualizations(usage_summary)
